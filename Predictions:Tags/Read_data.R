@@ -182,9 +182,9 @@ Courses$C_Grade=as.numeric(Courses$midtermGrade=="C-")
 Courses$D_Grade=as.numeric(Courses$midtermGrade=="D")
 Courses$F_Grade=as.numeric(Courses$midtermGrade=="F")
 #Reshape to get a dataset with students as rows and number of courses as columns
-library(plyr)
-#Courses1=ddply(Courses, .(anonId), summarise, Phys=sum(Phys), Chem=sum(Chem), Biol=sum(Biol), Math14=sum(Math14), Calc1=sum(Calc1), Calc2=sum(Calc2), Psych131=sum(Psych131), MidtermPoints=sum(C_Grade)+sum(D_Grade)+sum(F_Grade))
-Courses1=ddply(Courses, .(anonId), summarise, Phys=sum(Phys), Chem=sum(Chem), Biol=sum(Biol), Math14=sum(Math14), Calc1=sum(Calc1), Calc2=sum(Calc2), Psych131=sum(Psych131), MidtermPoints=sum(C_Grade)+2*sum(D_Grade)+3*sum(F_Grade))
+library(dplyr)
+by_Id <- group_by(Courses, anonId)
+Courses1 <- summarise(by_Id, Phys=sum(Phys), Chem=sum(Chem), Biol=sum(Biol), Math14=sum(Math14), Calc1=sum(Calc1), Calc2=sum(Calc2), Psych131=sum(Psych131), MidtermPoints=sum(C_Grade)+2*sum(D_Grade)+3*sum(F_Grade))
 Courses1$Math14=as.numeric(Courses1$Math14>0)        #Treat math14 and Psych131 and 0-1 indicator of taking these remedial courses
 Courses1$Psych131=as.numeric(Courses1$Psych131>0)
 Courses1$StemCourses=Courses1$Phys+Courses1$Chem+Courses1$Biol
@@ -193,7 +193,8 @@ depts<-read.csv("depts.csv")
 STEMdepts=depts$Dept[depts$STEM==1]
 STEMCourses=Courses[Courses$dept%in%STEMdepts,]
 STEMCourses$Pts=STEMCourses$C_Grade+2*STEMCourses$D_Grade+3*STEMCourses$F_Grade
-Courses2=ddply(STEMCourses, .(anonId), summarise,  STEMMidterm=mean(Pts))
+by_Id2=group_by(STEMCourses, anonId)
+Courses2=summarise(by_Id2, STEMMidterm=mean(Pts))
 Courses1 <- merge(Courses1, Courses2,  by="anonId", all=TRUE)
 
 #Read in student information concerning all students for each semester
@@ -271,6 +272,11 @@ MAJ$MajCat=as.factor(MAJ$MajCat)
 varnames=c("anonId", "clsfnYr.1", "Sem1begSTEM", "Sem3begSTEM", "EnrS3", "MajCat", "majorCurrStart.1")
 MAJ=MAJ[, varnames]
 
+#Blackboard Logins
+BB2016 <- read.xls("Blackboard2016.xls")
+#restrict to 2016 first-year students
+BB2016=subset(BB2016, BB2016$anonId%in%subset(FYinfo, FYinfo$dataset_term==2016)$anonId)
+
 #Merge datasets together
 #FYinfo contains all the first-year students we want. Only get subsets from other datasets that have these students
 INFO=merge(FYinfo,subset(ALEKS,ALEKS$anonId%in%FYinfo$anonId), by="anonId", all=TRUE)
@@ -278,6 +284,7 @@ INFO=merge(INFO,subset(LC, LC$anonId%in%INFO$anonId), by="anonId",all=TRUE)
 INFO=merge(INFO,subset(ACTInv, ACTInv$anonId%in%INFO$anonId),by="anonId", all=TRUE)
 INFO=merge(INFO, subset(Courses1, Courses1$anonId%in%INFO$anonId), by="anonId", all=FALSE) #exclude students that registrar didn't provide course data for
 INFO=merge(INFO, subset(MW, MW$anonId%in%INFO$anonId), by="anonId", all=TRUE)
+INFO=merge(INFO, BB2016, by="anonId", all=TRUE)
 FYStudents=merge(INFO,subset(MAJ, MAJ$anonId%in%INFO$anonId),by="anonId", all=TRUE)
 FYStudents=subset(FYStudents, Sem1begSTEM==1) #Only initial STEM majors
 #FYStudents=subset(FYStudents, admsnType==1)  #Exclude transfers
@@ -285,6 +292,7 @@ FYStudents$Class=1-FYStudents$Sem3begSTEM
 FYStudents$LC_type=as.character(FYStudents$LC_type)
 FYStudents$LC_type[is.na(FYStudents$LC_type)==T]="0"
 FYStudents$LC_type <- factor (as.character(FYStudents$LC_type), levels=c("0","B","C", "O", "R"))
+
 
 exclude=c("admsnType", "Sem1begSTEM", "Sem3begSTEM")
 STEM1=FYStudents[, !(names(FYStudents)%in%exclude)]
@@ -352,6 +360,7 @@ changevarnames=function(df){
               "Mapworks-Peer Connections",
               "Mapworks-Math and Science Self Efficacy",
               "Mapworks-Financial Concerns",
+              "Blackboard_Logins",
               "First-year Classification",
               "Major Category",
               "Major",
@@ -369,7 +378,7 @@ STEM1=changevarnames(STEM1)
 #pctmissing
 
 setwd("~/Box Sync/Iowa State/Engage Analysis/Datasets")
-saveRDS(STEM,"STEM.rds") #Contains variables to be used for RF
-write.csv(STEM,"STEM.csv")
-saveRDS(STEM1,"STEM1.rds") #Contains variables to be used for RF
-write.csv(STEM1,"STEM1.csv")
+saveRDS(STEM,"STEM_BB_9-15-17.rds") #Contains variables to be used for RF
+write.csv(STEM,"STEM_BB_9-15-17.csv")
+saveRDS(STEM1,"STEM1_BB_9-15-17.rds") #Contains variables to be used for RF
+write.csv(STEM1,"STEM1_BB_9-15-17.csv")
