@@ -252,6 +252,7 @@ for (i in 1:nfolds){
 save.image(file="AUC_VI_ISU_7-2.Rdata")
 
 ##########################################################################################
+setwd("~/Box Sync/Iowa State/Engage Analysis/Science Paper")
 load("AUC_VI_ISU_7-2.Rdata")
 
 ComputeAUCS=function(MajCat){
@@ -270,6 +271,8 @@ return(AUC1)
 
 VarGroupNames=c("HSAcademics", "Demographics", "Activities", "ISUAwards", "MW_AcademicSkills", "MW_SocialIntegration","MW_MajSatisfaction","MW_ISUSatisfaction", "MW_MathSciSelfEfficacy","MW_FinancialConcerns", "Tests", "Sem1Classes", "MidtermGrades", "ACTInterest","LCommunity" )
 
+
+#Table A4 comes from ALLdf, BIOdf, etc. 
 ntrees=ntree
 AUCALL=ComputeAUCS(c("BIO", "ENG", "HH", "MTH", "PHY"))
 ALLdf=data.frame(VarGroupNames,colMeans(AUCALL-AUCALL[,1])[2:16],100*colMeans((AUCALL-AUCALL[,1])/AUCALL[,1])[2:16])

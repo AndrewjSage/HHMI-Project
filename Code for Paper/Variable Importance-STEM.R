@@ -37,7 +37,9 @@ multiplot <- function(..., plotlist = NULL, file, cols = 1, layout = NULL) {
 
 set.seed(04082017)
 setwd("~/Box Sync/Iowa State/Engage Analysis/Current Code/Summer 2017")
-load("STEMfiles.Rdata")
+load("STEMfiles.Rdata")  
+#In STEM, Should have 3240 students in 2014 and 3344 in 2015
+#In STEM1, Should have 3667 in 2014 and 3792 in 2015
 STEM <- STEM[(STEM$dataset_term>2013) & (STEM$dataset_term<2016),]
 DATA <- subset(STEM, select=-c(anonId, majorCurrStart.1, Sem3begSTEM, EnrS3, dataset_term, PlannedEC, satVrbl, satMath,SCICourses))
 

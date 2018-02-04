@@ -7,15 +7,13 @@ MW13<-read.csv("Mapworks_2013.csv")
 MW14<-read.csv("Mapworks_2014.csv")
 MW15<-read.csv("Mapworks_2015.csv")
 MW16<-read.csv("Mapworks_2016.csv")
-MW17<-read.csv("Mapworks_2017.csv")
 MW11$dataset_term.x="2011"
 MW12$dataset_term.x="2012"
 MW13$dataset_term.x="2013"
 MW14$dataset_term.x="2014"
 MW15$dataset_term.x="2015"
 MW16$dataset_term.x="2016"
-MW17$dataset_term.x="2017"
-MW=rbind(MW11, MW12, MW13, MW14, MW15, MW16, MW17)
+MW=rbind(MW11, MW12, MW13, MW14, MW15, MW16)
 #Exclude factors MW has already computed. Questions align differently from year to year
 MW=MW[,-(71:91)]
 
@@ -45,13 +43,13 @@ MWFA=mice(MWFA, m = 5, method = vector("character", length = ncol(MWFA)),
 Imputeddata=complete(MWFA,5)
 #Imputeddata$anonId=MW$anonId
 setwd("~/Box Sync/Iowa State/Engage Analysis/Datasets")
-write.csv(Imputeddata, "MW_IMP2017.csv")
+write.csv(Imputeddata, "MW_IMP2016.csv")
 
 #################################################################################################################################################
 #Can start here if we already have MW imputed data
 setwd("~/Box Sync/Iowa State/Engage Analysis/Datasets")
 MW=read.csv("MapworksData.csv")
-MWFA=read.csv("MW_IMP2017.csv")[,-1]
+MWFA=read.csv("MW_IMP2016.csv")[,-1]
 
 factorinfo <- factanal(MWFA, 5, rotation="promax", scale=T, center=T)
 print(factorinfo, digits=2, cutoff=0.2, sort=TRUE)
@@ -131,8 +129,7 @@ LC13=subset(LC, LC$dataset_term==2013 & LC$anonId%in%subset(FYinfo, FYinfo$datas
 LC14=subset(LC, LC$dataset_term==2014 & LC$anonId%in%subset(FYinfo, FYinfo$dataset_term==2014)$anonId)
 LC15=subset(LC, LC$dataset_term==2015 & LC$anonId%in%subset(FYinfo, FYinfo$dataset_term==2015)$anonId)
 LC16=subset(LC, LC$dataset_term==2016 & LC$anonId%in%subset(FYinfo, FYinfo$dataset_term==2016)$anonId)
-LC17=subset(LC, LC$dataset_term==2017 & LC$anonId%in%subset(FYinfo, FYinfo$dataset_term==2017)$anonId)
-LC=rbind(LC11, LC12, LC13, LC14, LC15, LC16, LC17)
+LC=rbind(LC11, LC12, LC13, LC14, LC15, LC16)
 levels(LC$type)=c("B","C", "O", "R","0")
 names(LC)[names(LC)=="type"]="LC_type"
 varnames=c("anonId", "LC_type")
@@ -168,10 +165,8 @@ Courses14 <- Courses14[Courses14$anonId%in%FYinfo[FYinfo$dataset_term=="2014",]$
 Courses15 <- rbind(read.xls("Grades2015a.xls"), read.xls("Grades2015b.xls"),read.xls("Grades2015c.xls"))
 Courses15 <- Courses15[Courses15$anonId%in%FYinfo[FYinfo$dataset_term=="2015",]$anonId,]
 Courses16 <- rbind(read.xls("Grades2016a.xls"), read.xls("Grades2016b.xls"),read.xls("Grades2016c.xls"))
-Courses16 <-Courses16[Courses16$anonId%in%FYinfo[FYinfo$dataset_term=="2016",]$anonId,]
-Courses17 <- rbind(read.xls("Grades2017a.xls"), read.xls("Grades2017b.xls"),read.xls("Grades2017c.xls"))
-Courses17 <-Courses17[Courses17$anonId%in%FYinfo[FYinfo$dataset_term=="2017",]$anonId,]
-Courses=rbind(Courses11,Courses12,Courses13,Courses14, Courses15,Courses16, Courses17)
+Courses16<-Courses16[Courses16$anonId%in%FYinfo[FYinfo$dataset_term=="2016",]$anonId,]
+Courses=rbind(Courses11,Courses12,Courses13,Courses14, Courses15,Courses16)
 #Exclude 1-credit courses
 Courses=subset(Courses,credits>1)
 #Count number of courses by department
@@ -188,11 +183,8 @@ Courses$D_Grade=as.numeric(Courses$midtermGrade=="D")
 Courses$F_Grade=as.numeric(Courses$midtermGrade=="F")
 #Reshape to get a dataset with students as rows and number of courses as columns
 library(dplyr)
-#Courses1=ddply(Courses, .(anonId), summarise, Phys=sum(Phys), Chem=sum(Chem), Biol=sum(Biol), Math14=sum(Math14), Calc1=sum(Calc1), Calc2=sum(Calc2), Psych131=sum(Psych131), MidtermPoints=sum(C_Grade)+sum(D_Grade)+sum(F_Grade))
-#Courses1=ddply(Courses, .(anonId), summarise, Phys=sum(Phys), Chem=sum(Chem), Biol=sum(Biol), Math14=sum(Math14), Calc1=sum(Calc1), Calc2=sum(Calc2), Psych131=sum(Psych131), MidtermPoints=sum(C_Grade)+2*sum(D_Grade)+3*sum(F_Grade))
-Courses1=Courses %>% 
-  group_by(anonId) %>% 
-  summarize(Phys=sum(Phys), Chem=sum(Chem), Biol=sum(Biol), Math14=sum(Math14), Calc1=sum(Calc1), Calc2=sum(Calc2), Psych131=sum(Psych131), MidtermPoints=sum(C_Grade)+2*sum(D_Grade)+3*sum(F_Grade))
+by_Id <- group_by(Courses, anonId)
+Courses1 <- summarise(by_Id, Phys=sum(Phys), Chem=sum(Chem), Biol=sum(Biol), Math14=sum(Math14), Calc1=sum(Calc1), Calc2=sum(Calc2), Psych131=sum(Psych131), MidtermPoints=sum(C_Grade)+2*sum(D_Grade)+3*sum(F_Grade))
 Courses1$Math14=as.numeric(Courses1$Math14>0)        #Treat math14 and Psych131 and 0-1 indicator of taking these remedial courses
 Courses1$Psych131=as.numeric(Courses1$Psych131>0)
 Courses1$StemCourses=Courses1$Phys+Courses1$Chem+Courses1$Biol
@@ -201,8 +193,8 @@ depts<-read.csv("depts.csv")
 STEMdepts=depts$Dept[depts$STEM==1]
 STEMCourses=Courses[Courses$dept%in%STEMdepts,]
 STEMCourses$Pts=STEMCourses$C_Grade+2*STEMCourses$D_Grade+3*STEMCourses$F_Grade
-#Courses2=ddply(STEMCourses, .(anonId), summarise,  STEMMidterm=mean(Pts))
-Courses2 <- STEMCourses %>% group_by(anonId) %>% summarize(STEMMidterm=mean(Pts))
+by_Id2=group_by(STEMCourses, anonId)
+Courses2=summarise(by_Id2, STEMMidterm=mean(Pts))
 Courses1 <- merge(Courses1, Courses2,  by="anonId", all=TRUE)
 
 #Read in student information concerning all students for each semester
@@ -212,14 +204,12 @@ F2013 <- read.csv("Student Info By Semester_Fall_2013.csv")
 F2014 <- read.csv("Student Info By Semester_Fall_2014.csv")
 F2015 <- read.csv("Student Info By Semester_Fall_2015.csv")
 F2016 <- read.csv("Student Info By Semester_Fall_2016.csv")
-F2017 <- read.csv("Student Info By Semester_Fall_2017.csv")
 S2012 <- read.csv("Student Info By Semester_Spring_2012.csv")
 S2013 <- read.csv("Student Info By Semester_Spring_2013.csv")
 S2014 <- read.csv("Student Info By Semester_Spring_2014.csv")
 S2015 <- read.csv("Student Info By Semester_Spring_2015.csv")
 S2016 <- read.csv("Student Info By Semester_Spring_2016.csv")
-S2017 <- read.csv("Student Info By Semester_Spring_2017.csv")
-S2018 <- subset(S2017, S2017$anonId%in%c("NA"))     #empty dataset for bookkeeping reasons 
+S2017 <- subset(S2016, S2016$anonId%in%c("NA"))     #empty dataset for bookkeeping reasons 
 #Combine student info including majors and GPA for fall, spring terms
 MAJ11 <- merge(F2011, S2012, by="anonId", all=TRUE)
 MAJ12 <- merge(F2012, S2013, by="anonId", all=TRUE)
@@ -227,9 +217,7 @@ MAJ13 <- merge(F2013, S2014, by="anonId", all=TRUE)
 MAJ14 <- merge(F2014, S2015, by="anonId", all=TRUE)
 MAJ15 <- merge(F2015, S2016, by="anonId", all=TRUE)
 MAJ16 <- merge(F2016, S2017, by="anonId", all=TRUE)
-MAJ17 <- merge(F2017, S2018, by="anonId", all=TRUE)
-MAJ18 <- MAJ17#Want everyone since we don't know who leaves 
-MAJ18[,-1] <- NA #set all but id's to NA
+MAJ17 <- MAJ16             #Want everyone since we don't know who leaves 
 #Get majors for 2nd year
 MAJ11 <- merge(MAJ11, subset(MAJ12, MAJ12$anonId%in%MAJ11$anonId), by="anonId", all=TRUE)
 MAJ12 <- merge(MAJ12, subset(MAJ13, MAJ13$anonId%in%MAJ12$anonId), by="anonId", all=TRUE)
@@ -237,7 +225,6 @@ MAJ13 <- merge(MAJ13, subset(MAJ14, MAJ14$anonId%in%MAJ13$anonId), by="anonId", 
 MAJ14 <- merge(MAJ14, subset(MAJ15, MAJ15$anonId%in%MAJ14$anonId), by="anonId", all=TRUE)
 MAJ15 <- merge(MAJ15, subset(MAJ16, MAJ16$anonId%in%MAJ15$anonId), by="anonId", all=TRUE)
 MAJ16 <- merge(MAJ16, subset(MAJ17, MAJ17$anonId%in%MAJ16$anonId), by="anonId", all=TRUE)
-MAJ17 <- merge(MAJ17, subset(MAJ18, MAJ18$anonId%in%MAJ17$anonId), by="anonId", all=TRUE)
 #Change names of variables to correspond to semester numbers
 Semnums=function(df){
   names(df)=gsub("x.x", "1", names(df))
@@ -252,7 +239,6 @@ MAJ13=Semnums(MAJ13)
 MAJ14=Semnums(MAJ14)
 MAJ15=Semnums(MAJ15)
 MAJ16=Semnums(MAJ16)
-MAJ17=Semnums(MAJ17)
 #Restrict to first year students
 MAJ11=subset(MAJ11, MAJ11$anonId%in%subset(FYinfo, FYinfo$dataset_term==2011)$anonId)
 MAJ12=subset(MAJ12, MAJ12$anonId%in%subset(FYinfo, FYinfo$dataset_term==2012)$anonId)
@@ -260,9 +246,8 @@ MAJ13=subset(MAJ13, MAJ13$anonId%in%subset(FYinfo, FYinfo$dataset_term==2013)$an
 MAJ14=subset(MAJ14, MAJ14$anonId%in%subset(FYinfo, FYinfo$dataset_term==2014)$anonId)
 MAJ15=subset(MAJ15, MAJ15$anonId%in%subset(FYinfo, FYinfo$dataset_term==2015)$anonId)
 MAJ16=subset(MAJ16, MAJ16$anonId%in%subset(FYinfo, FYinfo$dataset_term==2016)$anonId)
-MAJ17=subset(MAJ17, MAJ17$anonId%in%subset(FYinfo, FYinfo$dataset_term==2017)$anonId)
 #Dataset containing major information for all students
-MAJ=rbind(MAJ11, MAJ12, MAJ13, MAJ14, MAJ15, MAJ16, MAJ17)
+MAJ=rbind(MAJ11, MAJ12, MAJ13, MAJ14, MAJ15, MAJ16)
 #Determine whether students were STEM majors initially and after 1 year
 STEMmaj<-subset(stem.codes,(STEM=="Yes"))$Inst.major.code
 MAJ$Sem1begSTEM<-as.integer(MAJ$majorCurrStart.1%in%STEMmaj)
@@ -287,6 +272,11 @@ MAJ$MajCat=as.factor(MAJ$MajCat)
 varnames=c("anonId", "clsfnYr.1", "Sem1begSTEM", "Sem3begSTEM", "EnrS3", "MajCat", "majorCurrStart.1")
 MAJ=MAJ[, varnames]
 
+#Blackboard Logins
+BB2016 <- read.xls("Blackboard2016.xls")
+#restrict to 2016 first-year students
+BB2016=subset(BB2016, BB2016$anonId%in%subset(FYinfo, FYinfo$dataset_term==2016)$anonId)
+
 #Merge datasets together
 #FYinfo contains all the first-year students we want. Only get subsets from other datasets that have these students
 INFO=merge(FYinfo,subset(ALEKS,ALEKS$anonId%in%FYinfo$anonId), by="anonId", all=TRUE)
@@ -294,6 +284,7 @@ INFO=merge(INFO,subset(LC, LC$anonId%in%INFO$anonId), by="anonId",all=TRUE)
 INFO=merge(INFO,subset(ACTInv, ACTInv$anonId%in%INFO$anonId),by="anonId", all=TRUE)
 INFO=merge(INFO, subset(Courses1, Courses1$anonId%in%INFO$anonId), by="anonId", all=FALSE) #exclude students that registrar didn't provide course data for
 INFO=merge(INFO, subset(MW, MW$anonId%in%INFO$anonId), by="anonId", all=TRUE)
+INFO=merge(INFO, BB2016, by="anonId", all=TRUE)
 FYStudents=merge(INFO,subset(MAJ, MAJ$anonId%in%INFO$anonId),by="anonId", all=TRUE)
 FYStudents=subset(FYStudents, Sem1begSTEM==1) #Only initial STEM majors
 #FYStudents=subset(FYStudents, admsnType==1)  #Exclude transfers
@@ -302,10 +293,7 @@ FYStudents$LC_type=as.character(FYStudents$LC_type)
 FYStudents$LC_type[is.na(FYStudents$LC_type)==T]="0"
 FYStudents$LC_type <- factor (as.character(FYStudents$LC_type), levels=c("0","B","C", "O", "R"))
 
-#Artificially say that all 2017 students are enrolled in sem 3. Don't get rid of them
-FYStudents$EnrS3[FYStudents$dataset_term==2017] <- 1
 
-#Create datasets with all first-year STEM students and those who stay
 exclude=c("admsnType", "Sem1begSTEM", "Sem3begSTEM")
 STEM1=FYStudents[, !(names(FYStudents)%in%exclude)]
 STEM1=subset(STEM1, MajCat!="OPEN")
@@ -372,6 +360,7 @@ changevarnames=function(df){
               "Mapworks-Peer Connections",
               "Mapworks-Math and Science Self Efficacy",
               "Mapworks-Financial Concerns",
+              "Blackboard_Logins",
               "First-year Classification",
               "Major Category",
               "Major",
@@ -389,7 +378,7 @@ STEM1=changevarnames(STEM1)
 #pctmissing
 
 setwd("~/Box Sync/Iowa State/Engage Analysis/Datasets")
-saveRDS(STEM,"STEM.rds") #Contains variables to be used for RF
-write.csv(STEM,"STEM.csv")
-saveRDS(STEM1,"STEM1.rds") #Contains variables to be used for RF
-write.csv(STEM1,"STEM1.csv")
+saveRDS(STEM,"STEM_BB_9-15-17.rds") #Contains variables to be used for RF
+write.csv(STEM,"STEM_BB_9-15-17.csv")
+saveRDS(STEM1,"STEM1_BB_9-15-17.rds") #Contains variables to be used for RF
+write.csv(STEM1,"STEM1_BB_9-15-17.csv")
